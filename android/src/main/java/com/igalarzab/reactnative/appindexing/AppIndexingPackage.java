@@ -1,7 +1,5 @@
 package com.igalarzab.reactnative.appindexing;
 
-import android.app.Activity;
-
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.JavaScriptModule;
 import com.facebook.react.bridge.NativeModule;
@@ -15,16 +13,10 @@ import java.util.Collections;
 
 public class AppIndexingPackage implements ReactPackage {
 
-    private Activity activity;
-
-    public AppIndexingPackage(Activity activity) {
-        this.activity = activity;
-    }
-
     @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
-        modules.add(new AppIndexing(reactContext, activity));
+        modules.add(new AppIndexing(reactContext));
         return modules;
     }
 

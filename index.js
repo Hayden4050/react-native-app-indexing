@@ -24,23 +24,31 @@ export default class AppIndexing {
     })
   }
 
-  static startViewAction(title, url, description=null) {
+  static instantViewAction(title, url) {
     if (Platform.OS !== 'android') {
-      return null
+      return null;
+    }
+
+    NativeModules.AppIndexing.instantViewAction(title, url);
+  }
+
+  static startViewAction(title, url) {
+    if (Platform.OS !== 'android') {
+      return null;
     }
 
     if (!title || !url) {
-      throw new Error('title and url are mandatory')
+      throw new Error('title and url are mandatory');
     }
 
-    NativeModules.AppIndexing.startViewAction(title, url, description)
+    NativeModules.AppIndexing.startViewAction(title, url);
   }
 
   static stopViewAction() {
     if (Platform.OS !== 'android') {
-      return null
+      return null;
     }
 
-    NativeModules.AppIndexing.stopViewAction()
+    NativeModules.AppIndexing.stopViewAction();
   }
 }

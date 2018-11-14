@@ -1,32 +1,23 @@
 package com.igalarzab.reactnative.appindexing;
 
-import android.app.Activity;
-import android.net.Uri;
 import android.util.Log;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.appindexing.Thing.Builder;
-import com.google.android.gms.common.api.GoogleApiClient;
-
+import com.google.firebase.appindexing.Action;
+import com.google.firebase.appindexing.FirebaseUserActions;
 
 public class AppIndexing extends ReactContextBaseJavaModule {
 
     private static final String LOGTAG = "ReactNativeAppIndexing";
 
-    private GoogleApiClient googleApiClient;
-
     private Boolean started = false;
-    private String title;
-    private String description;
-    private Uri url;
+    private String mTitle;
+    private String mUrl;
 
-    public AppIndexing(ReactApplicationContext reactContext, Activity activity) {
+    public AppIndexing(ReactApplicationContext reactContext) {
         super(reactContext);
-        googleApiClient = new GoogleApiClient.Builder(activity).addApi(AppIndex.API).build();
     }
 
     @Override
@@ -35,16 +26,26 @@ public class AppIndexing extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void startViewAction(String title, String url, String description) {
+    public void instantViewAction(String title, String url) {
+        if (started) {
+            Log.e(LOGTAG, "Starting instant view action before ending the active one");
+            stopViewAction();
+        }
+
+        setAction(title, url);
+        FirebaseUserActions.getInstance().end(getAction());
+    }
+
+    @ReactMethod
+    public void startViewAction(String title, String url) {
         if (started) {
             Log.e(LOGTAG, "Starting new view action before ending the active one");
             stopViewAction();
         }
 
-        setAction(title, url, description);
+        setAction(title, url);
 
-        googleApiClient.connect();
-        AppIndex.AppIndexApi.start(googleApiClient, getAction());
+        FirebaseUserActions.getInstance().start(getAction());
 
         Log.d(LOGTAG, "Started view action with the URL: " + url);
         started = true;
@@ -57,31 +58,20 @@ public class AppIndexing extends ReactContextBaseJavaModule {
             return;
         }
 
-        AppIndex.AppIndexApi.end(googleApiClient, getAction());
-        googleApiClient.disconnect();
+        FirebaseUserActions.getInstance().end(getAction());
 
         Log.d(LOGTAG, "Ended view action");
         started = false;
     }
 
     private Action getAction() {
-        Builder builder = new Builder()
-            .setName(title)
-            .setUrl(url);
-
-        if (description != null) {
-            builder.setDescription(description);
-        }
-
-        return new Action.Builder(Action.TYPE_VIEW)
-            .setObject(builder.build())
-            .setActionStatus(Action.STATUS_TYPE_COMPLETED)
-            .build();
+        return new Action.Builder(Action.Builder.VIEW_ACTION)
+                        .setObject(mTitle, mUrl)
+                        .build();
     }
 
-    private void setAction(String title, String url, String description) {
-        this.title = title;
-        this.url = Uri.parse(url);
-        this.description = description;
+    private void setAction(String title, String url) {
+        this.mTitle = title;
+        this.mUrl = url;
     }
 }
